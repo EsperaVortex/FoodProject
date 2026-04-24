@@ -1,10 +1,9 @@
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken"
-import bycrypt from "bcrypt"
+import bcrypt from "bcrypt"
 import validator from 'validator'
 
-//login function
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
     const { email, password } = req.body
 
     try {
@@ -12,7 +11,7 @@ const loginUser = async (req, res) => {
         if (!user) {
             return res.json({ success: false, message: "User Doesn't Exist" })
         }
-        const isMatch = await bycrypt.compare(password, user.password)
+        const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
             return res.json({ success: false, message: "Invalid Creds" })
         }
@@ -25,13 +24,13 @@ const loginUser = async (req, res) => {
     }
 }
 
-// create a token
 const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET)
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '3d'
+    })
 }
 
-// register function
-const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
     const { username, password, email } = req.body
 
     try {
@@ -55,14 +54,12 @@ const registerUser = async (req, res) => {
             })
         }
 
-        // if everything works
-        const salt = await bycrypt.genSalt(10)
-        const hashedPassword = await bycrypt.hash(password, salt)
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
 
-        // New user
         const newUser = new userModel({
-            username: username,
-            email: email,
+            username,
+            email,
             password: hashedPassword
         })
 
@@ -70,7 +67,8 @@ const registerUser = async (req, res) => {
 
         const token = createToken(user._id)
         res.json({
-            success: true, token
+            success: true,
+            token
         })
 
     } catch (error) {
@@ -79,4 +77,3 @@ const registerUser = async (req, res) => {
     }
 }
 
-export { loginUser, registerUser }

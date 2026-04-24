@@ -1,7 +1,7 @@
 import React from 'react'
-import Navbar from '../../components/Navbar/Navbar'
-import MyOrder from '../../components/MyOrder/MyOrder'
-import Footer from '../../components/Footer/Footer'
+import Navbar from '../components/Navbar'
+import MyOrder from '../components/MyOrder'
+import Footer from '../components/Footer'
 
 const MyOrderPage = () => {
     return (

@@ -1,7 +1,6 @@
 import asyncHandler from 'express-async-handler'
 import { CartItem } from '../models/cartModel.js'
 
-//Get cart
 export const getCart = asyncHandler(async (req, res) => {
     const items = await CartItem.find({
         user: req.user.id
@@ -15,7 +14,6 @@ export const getCart = asyncHandler(async (req, res) => {
     res.json(formatted)
 })
 
-// Add to cart function to add items
 export const addToCart = asyncHandler(async (req, res) => {
     const { itemId, quantity } = req.body
 
@@ -57,7 +55,6 @@ export const addToCart = asyncHandler(async (req, res) => {
     })
 })
 
-// Create a method to update cart and items quantity
 export const updateCartItem = asyncHandler(async (req, res) => {
     const { quantity } = req.body
 
@@ -79,7 +76,6 @@ export const updateCartItem = asyncHandler(async (req, res) => {
     })
 })
 
-// delete dunction
 export const deleteCartItem = asyncHandler(async (req, res) => {
     const cartItem = await CartItem.findOne({
         _id: req.params.id,
@@ -96,7 +92,6 @@ export const deleteCartItem = asyncHandler(async (req, res) => {
 })
 
 
-// clear cart function to empty the cart
 export const clearCart = asyncHandler(async (req, res) => {
     await CartItem.deleteMany({
         user: req.user._id

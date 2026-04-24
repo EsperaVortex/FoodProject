@@ -33,7 +33,6 @@ export const createItem = async (req, res, next) => {
     }
 }
 
-// Get function to get all items
 export const getItems = async (req, res, next) => {
     try {
         const items = await itemModel.find().sort({ createdAt: -1 });
@@ -50,7 +49,6 @@ export const getItems = async (req, res, next) => {
     }
 }
 
-// Delete function to delete items
 export const deleteItem = async (req, res, next) => {
     try {
         const removed = await itemModel.findByIdAndDelete(req.params.id);

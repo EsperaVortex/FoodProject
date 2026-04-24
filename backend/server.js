@@ -1,21 +1,21 @@
-import express from 'express'
+import dotenv from 'dotenv'
+dotenv.config()
 import cors from 'cors'
-import 'dotenv/config'
 import { connectDB } from './config/db.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import userRouter from './routes/userRoutes.js'
 import itemRouter from './routes/itemRoutes.js'
 import cartRouter from './routes/cartRoutes.js'
 import orderRouter from './routes/orderRoutes.js'
+import userRoutes from './routes/userRoutes.js'
+import express from 'express'
+const app = express();
 
-const app = express()
-const port = process.env.PORT || 4000
+const PORT = process.env.PORT || 4000
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Middleware
 app.use(cors({
     origin: (origin, callback) => {
         const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174']
@@ -31,23 +31,16 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-//DATABASE
 connectDB()
 
-// Static files middleware (should come before API routes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-// Routes
-app.use('/api/user', userRouter)
+app.use('/api/user', userRoutes)
 app.use('/api/items', itemRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/orders', orderRouter)
 
 
-app.get('/', (req, res) => {
-    res.send('API WORKING')
-})
-
-app.listen(port, () => {
-    console.log(`Server started on http://localhost:${port}`)
+app.listen(PORT, () => {
+    console.log(`Server started on http://localhost:${PORT}`)
 })

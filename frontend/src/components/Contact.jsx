@@ -4,7 +4,7 @@ import {
     FiArrowRight, FiGlobe, FiMail, FiMapPin,
     FiMessageSquare, FiPhone
 } from 'react-icons/fi'
-import { contactFormFields } from '../../assets/dummydata'
+import { contactFormFields } from '../assets/dummydata'
 
 const Contact = () => {
     const [formData, setFormData] = useState({

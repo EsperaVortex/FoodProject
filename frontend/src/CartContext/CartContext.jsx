@@ -1,89 +1,71 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useReducer,
-  useMemo,
-  createContext,
-} from "react";
-import axios from "axios";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
 
-// Reducer
-const cartReducer = (state, action) => {
-  switch (action.type) {
-    case "HYDRATE_CART":
-      return action.payload;
-    case "ADD_ITEM": {
-      const { _id, name, price, imageUrl, quantity } = action.payload;
-      const exists = state.find((ci) => ci._id === _id);
-      if (exists) {
-        return state.map((ci) => (ci._id === _id ? { ...ci, quantity } : ci));
-      }
-      return [...state, { _id, name, price, imageUrl, quantity }];
-    }
-    case "REMOVE_ITEM":
-      return state.filter((ci) => ci._id !== action.payload);
-    case "UPDATE_ITEM": {
-      const { _id, quantity } = action.payload;
-      return state.map((ci) => (ci._id === _id ? { ...ci, quantity } : ci));
-    }
-    case "CLEAR_CART":
-      return [];
-    default:
-      return state;
-  }
-};
-
-// Load from localStorage
-const initializer = () => {
-  try {
-    return JSON.parse(localStorage.getItem("cart") || "[]");
-  } catch {
-    return [];
-  }
-};
-
 export const CartProvider = ({ children }) => {
-  const [cartItems, dispatch] = useReducer(cartReducer, [], initializer);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("cart")) || [];
+    } catch {
+      return [];
+    }
+  });
 
+  // save to localStorage
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Add to cart
-  const addToCart = useCallback(async (item, qty) => {
-    const cartItem = {
-      _id: item._id,
-      name: item.name,
-      price: item.price,
-      imageUrl: item.imageUrl,
-      quantity: qty,
-    };
-    dispatch({ type: "ADD_ITEM", payload: cartItem });
-  }, []);
+  // ADD ITEM
+  const addToCart = (item, qty) => {
+    setCartItems((prev) => {
+      const exists = prev.find((ci) => ci._id === item._id);
 
-  const removeFromCart = useCallback((_id) => {
-    dispatch({ type: "REMOVE_ITEM", payload: _id });
-  }, []);
+      if (exists) {
+        return prev.map((ci) =>
+          ci._id === item._id ? { ...ci, quantity: qty } : ci
+        );
+      }
 
-  const updateQuantity = useCallback((_id, qty) => {
-    dispatch({ type: "UPDATE_ITEM", payload: { _id, quantity: qty } });
-  }, []);
+      return [
+        ...prev,
+        {
+          _id: item._id,
+          name: item.name,
+          price: item.price,
+          imageUrl: item.imageUrl,
+          quantity: qty,
+        },
+      ];
+    });
+  };
 
-  const clearCart = useCallback(() => {
-    dispatch({ type: "CLEAR_CART" });
-  }, []);
+  // REMOVE ITEM
+  const removeFromCart = (_id) => {
+    setCartItems((prev) => prev.filter((ci) => ci._id !== _id));
+  };
 
-  const totalItems = useMemo(
-    () => cartItems.reduce((sum, ci) => sum + (ci.quantity || 0), 0),
-    [cartItems]
+  // UPDATE QUANTITY
+  const updateQuantity = (_id, qty) => {
+    setCartItems((prev) =>
+      prev.map((ci) =>
+        ci._id === _id ? { ...ci, quantity: qty } : ci
+      )
+    );
+  };
+
+  // CLEAR CART
+  const clearCart = () => setCartItems([]);
+
+  // TOTALS
+  const totalItems = cartItems.reduce(
+    (sum, ci) => sum + (ci.quantity || 0),
+    0
   );
 
-  const totalAmount = useMemo(
-    () => cartItems.reduce((sum, ci) => sum + ci.price * ci.quantity, 0),
-    [cartItems]
+  const totalAmount = cartItems.reduce(
+    (sum, ci) => sum + ci.price * ci.quantity,
+    0
   );
 
   return (
