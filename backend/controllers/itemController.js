@@ -23,13 +23,9 @@ export const createItem = async (req, res, next) => {
         res.status(201).json(saved);
     }
     catch (error) {
-        if (error.code === 11000) {
-            res.status(400).json({
-                message: 'Item name already exists'
-            });
-        } else {
-            next(error); // Added proper error handling for other errors
-        }
+        res.status(400).json({
+            message: 'Item name already exists'
+        });
     }
 }
 

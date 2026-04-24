@@ -9,25 +9,43 @@ export const loginUser = async (req, res) => {
     try {
         const user = await userModel.findOne({ email })
         if (!user) {
-            return res.json({ success: false, message: "User Doesn't Exist" })
+            return res.json({
+                success: false,
+                message: "User Doesn't Exist"
+            })
         }
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
-            return res.json({ success: false, message: "Invalid Creds" })
+            return res.json({
+                success: false,
+                message: "Invalid Creds"
+            })
         }
-        const token = createToken(user._id)
-        res.json({ success: true, token })
+        const token = createToken(user._id, user.username, user.email)
+        res.json({
+            success: true,
+            token
+        })
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: "Error" })
+        res.json({
+            success: false,
+            message: "Error"
+        })
     }
 }
 
-const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '3d'
-    })
+const createToken = (id, username, email) => {
+    return jwt.sign(
+        {
+            id,
+            username,
+            email
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '3d' }
+    )
 }
 
 export const registerUser = async (req, res) => {
@@ -36,10 +54,12 @@ export const registerUser = async (req, res) => {
     try {
         const exist = await userModel.findOne({ email })
         if (exist) {
-            return res.json({ success: false, message: "User Already Exists" })
+            return res.json({
+                success: false,
+                message: "User Already Exists"
+            })
         }
 
-        //validation
         if (!validator.isEmail(email)) {
             return res.json({
                 success: false,

@@ -5,19 +5,16 @@ import 'dotenv/config'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Create order
 export const createOrder = async (req, res) => {
     try {
         const {
             firstName, lastName, phone, email, address, city, paymentMethod, subtotal, tax, total, items
         } = req.body
 
-        // Validate items array
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ message: "Invalid or empty items array" })
         }
 
-        // Map items properly
         const orderItems = items.map(({ item, name, price, imageUrl, quantity }) => {
             const base = item || {}
             return {
@@ -34,7 +31,6 @@ export const createOrder = async (req, res) => {
         let newOrder
 
         if (paymentMethod === 'online') {
-            // Stripe checkout session
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 mode: 'payment',
@@ -66,7 +62,6 @@ export const createOrder = async (req, res) => {
             return res.status(201).json({ order: newOrder, checkoutUrl: session.url })
         }
 
-        // Cash on Delivery
         newOrder = new Order({
             user: req.user._id,
             firstName, lastName, phone, email, address, city, paymentMethod,
@@ -77,7 +72,6 @@ export const createOrder = async (req, res) => {
 
         await newOrder.save()
 
-        // Update totalSold for each item
         for (const { item, quantity } of orderItems) {
             await itemModel.findOneAndUpdate({ name: item.name }, { $inc: { totalSold: quantity } })
         }
@@ -90,7 +84,6 @@ export const createOrder = async (req, res) => {
     }
 }
 
-// Confirm Stripe payment
 export const confirmPayment = async (req, res) => {
     try {
         const { session_id } = req.query
@@ -119,7 +112,6 @@ export const confirmPayment = async (req, res) => {
     }
 }
 
-// Get orders for logged-in user
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 }).lean()
@@ -133,7 +125,6 @@ export const getOrders = async (req, res) => {
     }
 }
 
-// Admin: get all orders
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find({}).sort({ createdAt: -1 }).lean()
@@ -166,11 +157,12 @@ export const getAllOrders = async (req, res) => {
     }
 }
 
-// Update any order (admin)
 export const updateAnyOrder = async (req, res) => {
     try {
         const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-        if (!updated) return res.status(404).json({ message: "Order not found" })
+        if (!updated) return res.status(404).json({
+            message: "Order not found"
+        })
         res.json(updated)
     } catch (error) {
         console.error('updateAnyOrder Error:', error)
@@ -178,7 +170,6 @@ export const updateAnyOrder = async (req, res) => {
     }
 }
 
-// Get order by ID for user
 export const getOrderById = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
@@ -191,13 +182,17 @@ export const getOrderById = async (req, res) => {
     }
 }
 
-// Update order by user
 export const updateOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
-        if (!order) return res.status(404).json({ message: 'Order not found' })
-        if (!order.user.equals(req.user._id)) return res.status(403).json({ message: 'Access Denied' })
-
+        if (!order) return res.status(404).json({
+            message: 'Order not found'
+        })
+        if (!order.user.equals(req.user._id)) {
+            return res.status(403).json({
+                message: 'Access Denied'
+            })
+        }
         const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json(updated)
     } catch (error) {
@@ -206,7 +201,6 @@ export const updateOrder = async (req, res) => {
     }
 }
 
-// Get top 5 ordered items
 export const getTopOrderedItems = async (req, res) => {
     try {
         const orders = await Order.find({}).lean()
