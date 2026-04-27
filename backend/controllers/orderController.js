@@ -205,7 +205,6 @@ export const getTopOrderedItems = async (req, res) => {
     try {
         const orders = await Order.find({}).lean()
         const itemCountMap = new Map()
-
         for (const order of orders) {
             for (const { item, quantity } of order.items) {
                 const key = item.name

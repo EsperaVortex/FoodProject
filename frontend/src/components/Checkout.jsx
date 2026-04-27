@@ -63,10 +63,16 @@ const Checkout = () => {
       const subtotal = Number(totalAmount.toFixed(2));
       const tax = Number((subtotal * 0.05).toFixed(2));
       const payload = {
-        ...formData, subtotal, tax,
+        ...formData,
+        subtotal,
+        tax,
         total: Number((subtotal + tax).toFixed(2)),
         items: cartItems.map(ci => ({
-          item: { name: ci.item?.name || "Unknown Item", price: ci.item?.price || 0, imageUrl: ci.item?.imageUrl || "" },
+          item: {
+            name: ci.name || "Unknown Item",
+            price: ci.price || 0,
+            imageUrl: ci.imageUrl || "",
+          },
           quantity: ci.quantity || 1,
         })),
       };
@@ -100,7 +106,7 @@ const Checkout = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-black text-white" style={{ fontFamily: "'Georgia', serif" }}>
-            Check<span className="bg-gradient-to-r from-amber-400 to-orange-300 bg-clip-text text-transparent">out</span>
+            Check<span className="text-amber-400">out</span>
           </h1>
         </div>
 
@@ -114,9 +120,7 @@ const Checkout = () => {
 
           {/* Personal Info */}
           <div className="bg-white/3 border border-amber-900/25 rounded-2xl p-6 space-y-4">
-            <h2 className="text-base font-bold text-amber-300 mb-2" style={{ fontFamily: "'Georgia', serif" }}>
-              Delivery Details
-            </h2>
+            <h2 className="text-base font-bold text-amber-300 mb-2">Delivery Details</h2>
             <div className="grid grid-cols-2 gap-4">
               <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} />
               <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange} />
@@ -132,14 +136,12 @@ const Checkout = () => {
 
             {/* Summary */}
             <div className="bg-white/3 border border-amber-900/25 rounded-2xl p-6 space-y-3">
-              <h2 className="text-base font-bold text-amber-300 mb-3" style={{ fontFamily: "'Georgia', serif" }}>
-                Order Summary
-              </h2>
+              <h2 className="text-base font-bold text-amber-300 mb-3">Order Summary</h2>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {cartItems.map(({ item, quantity }, index) => (
-                  <div key={item?._id || index} className="flex justify-between text-xs text-amber-200/60 pb-2 border-b border-amber-900/20 last:border-0">
-                    <span>{item?.name || "Unknown"} × {quantity || 1}</span>
-                    <span className="text-amber-300/80">Rs {((item?.price || 0) * (quantity || 1)).toFixed(0)}</span>
+                {cartItems.map((ci, index) => (
+                  <div key={ci._id || index} className="flex justify-between text-xs text-amber-200/60 pb-2 border-b border-amber-900/20 last:border-0">
+                    <span>{ci.name || "Unknown"} × {ci.quantity || 1}</span>
+                    <span className="text-amber-300/80">Rs {((ci.price || 0) * (ci.quantity || 1)).toFixed(0)}</span>
                   </div>
                 ))}
               </div>
@@ -158,9 +160,7 @@ const Checkout = () => {
 
             {/* Payment */}
             <div className="bg-white/3 border border-amber-900/25 rounded-2xl p-6 space-y-4">
-              <h2 className="text-base font-bold text-amber-300" style={{ fontFamily: "'Georgia', serif" }}>
-                Payment Method
-              </h2>
+              <h2 className="text-base font-bold text-amber-300">Payment Method</h2>
               <div className="space-y-2">
                 {[{ value: "cod", label: "💵 Cash on Delivery" }, { value: "online", label: "💳 Online Payment" }].map(opt => (
                   <label key={opt.value} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${formData.paymentMethod === opt.value ? 'border-amber-500/50 bg-amber-500/10' : 'border-amber-900/25 hover:border-amber-800/50 hover:bg-white/3'}`}>
@@ -173,7 +173,7 @@ const Checkout = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-xl text-sm font-bold text-[#1a0f07] bg-gradient-to-br from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg shadow-amber-900/30"
+                className="w-full py-3 rounded-xl text-sm font-bold text-[#1a0f07] bg-amber-500 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? "Placing Order..." : "Place Order"}
               </button>

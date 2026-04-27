@@ -1,262 +1,162 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-    FiArrowLeft, FiBox, FiCheckCircle, FiClock,
-    FiMapPin, FiTruck, FiUser
-} from 'react-icons/fi'
+import { FiArrowLeft, FiClock, FiCheckCircle, FiTruck } from 'react-icons/fi'
 import axios from 'axios'
 
+const statusStyles = {
+  processing: { color: 'text-amber-400', label: 'Processing', icon: <FiClock /> },
+  outForDelivery: { color: 'text-blue-400', label: 'Out for Delivery', icon: <FiTruck /> },
+  delivered: { color: 'text-green-400', label: 'Delivered', icon: <FiCheckCircle /> },
+  pending: { color: 'text-yellow-400', label: 'Payment Pending', icon: <FiClock /> },
+  succeeded: { color: 'text-green-400', label: 'Completed', icon: <FiCheckCircle /> },
+}
+
 const MyOrder = () => {
-    const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-    const user = JSON.parse(localStorage.getItem('user'))
+  const user = JSON.parse(localStorage.getItem('user'))
 
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const response = await axios.get('http://localhost:4000/api/orders', {
-                    params: { email: user?.email },
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                    }
-                })
+  useEffect(() => {
+    axios.get('http://localhost:4000/api/orders', {
+      params: { email: user?.email },
+      headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+    })
+      .then(res => {
+        setOrders(res.data.map(order => ({
+          ...order,
+          createdAt: new Date(order.createdAt).toLocaleString('en-IN', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          }),
+          paymentStatus: order.paymentStatus?.toLowerCase() || 'pending'
+        })))
+      })
+      .catch(err => setError(err.response?.data?.message || 'Failed to load orders'))
+      .finally(() => setLoading(false))
+  }, [user?.email])
 
-                const formattedOrders = response.data.map(order => ({
-                    ...order,
-                    items: order.items?.map(entry => ({
-                        _id: entry._id,
-                        item: {
-                            ...entry.item,
-                            imageUrl: entry.item.imageUrl,
-                        },
-                        quantity: entry.quantity
-                    })) || [],
-                    createdAt: new Date(order.createdAt).toLocaleString('en-IN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    paymentStatus: order.paymentStatus?.toLowerCase() || 'pending'
-                }))
-                setOrders(formattedOrders)
-                setError(null)
-            } catch (error) {
-                console.error('Error fetching orders:', error)
-                setError(error.response?.data?.message || 'Failed to load orders. Please try again later')
-            } finally {
-                setLoading(false)
-            }
-        }
+  if (error) return (
+    <div className="min-h-screen bg-[#1a0f07] flex items-center justify-center flex-col gap-4">
+      <p className="text-red-400">{error}</p>
+      <button onClick={() => window.location.reload()} className="text-amber-400 hover:text-amber-300 text-sm">
+        Try Again
+      </button>
+    </div>
+  )
 
-        fetchOrders()
-    }, [user?.email])
+  return (
+    <div className="min-h-screen bg-[#1a0f07] text-white py-14 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
 
-    const statusStyles = {
-        processing: {
-            color: 'text-amber-400',
-            bg: 'bg-amber-900/20',
-            icon: <FiClock className="text-lg" />,
-            label: 'Processing'
-        },
-        outForDelivery: {
-            color: 'text-blue-400',
-            bg: 'bg-blue-900/20',
-            icon: <FiTruck className="text-lg" />,
-            label: 'Out for Delivery'
-        },
-        delivered: {
-            color: 'text-green-400',
-            bg: 'bg-green-900/20',
-            icon: <FiCheckCircle className="text-lg" />,
-            label: 'Delivered'
-        },
-        pending: {
-            color: 'text-yellow-400',
-            bg: 'bg-yellow-900/20',
-            icon: <FiClock className="text-lg" />,
-            label: 'Payment Pending'
-        },
-        succeeded: {
-            color: 'text-green-400',
-            bg: 'bg-green-900/20',
-            icon: <FiCheckCircle className="text-lg" />,
-            label: 'Completed'
-        }
-    }
-
-    const getPaymentMethodDetails = (method) => {
-        switch (method?.toLowerCase()) {
-            case 'cod':
-                return {
-                    label: 'COD',
-                    class: 'bg-yellow-600/30 text-yellow-300 border-yellow-500/50'
-                }
-            case 'card':
-                return {
-                    label: 'Credit/Debit Card',
-                    class: 'bg-blue-600/30 text-blue-300 border-blue-500/50'
-                }
-            case 'upi':
-                return {
-                    label: 'UPI Payment',
-                    class: 'bg-purple-600/30 text-purple-300 border-purple-500/50'
-                }
-            default:
-                return {
-                    label: 'Online',
-                    class: 'bg-green-600/30 text-green-400 border-green-500/50'
-                }
-        }
-    }
-
-    if (error) {
-        return (
-            <div className='min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center text-red-400 text-xl gap-4'>
-                <p>{error}</p>
-                <button onClick={() => window.location.reload()} className='flex items-center gap-2 text-amber-400 hover:text-amber-300'>
-                    <FiArrowLeft className='text-xl' />
-                    <span>Try Again</span>
-                </button>
-            </div>
-        )
-    }
-
-    return (
-        <div className='min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-12 px-4 sm:px-6 lg:px-8'>
-            <div className='mx-auto max-w-7xl'>
-                <div className='flex justify-between items-center mb-8'>
-                    <Link to='/' className='flex items-center gap-2 text-amber-400 hover:text-amber-300'>
-                        <FiArrowLeft className='text-xl' />
-                        <span className='font-bold'>Back to Home</span>
-                    </Link>
-                    <span className='text-amber-400/70 text-sm'>{user?.email}</span>
-                </div>
-
-                <div className='bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-amber-500/20'>
-                    <h2 className='text-3xl font-bold mb-8 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent text-center'>
-                        Order History
-                    </h2>
-
-                    {loading ? (
-                        <div className='text-center text-amber-300'>Loading orders...</div>
-                    ) : orders.length === 0 ? (
-                        <div className='text-center text-amber-400'>No orders found.</div>
-                    ) : (
-                        <div className='overflow-x-auto'>
-                            <table className='w-full'>
-                                <thead className='bg-[#3a2b2b]/50'>
-                                    <tr>
-                                        <th className="p-4 text-left text-amber-400">Order ID</th>
-                                        <th className="p-4 text-left text-amber-400">Customer</th>
-                                        <th className="p-4 text-left text-amber-400">Address</th>
-                                        <th className="p-4 text-left text-amber-400">Items</th>
-                                        <th className="p-4 text-left text-amber-400">Total Items</th>
-                                        <th className="p-4 text-left text-amber-400">Price</th>
-                                        <th className="p-4 text-left text-amber-400">Payment</th>
-                                        <th className="p-4 text-left text-amber-400">Status</th>
-                                        <th className="p-4 text-left text-amber-400">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {orders.map(order => {
-                                        const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0)
-                                        const totalPrice = order.total ?? order.items.reduce((sum, item) =>
-                                            sum + item.item.price * item.quantity, 0)
-
-                                        const paymentMethod = getPaymentMethodDetails(order.paymentMethod)
-                                        const orderStatus = statusStyles[order.status] || statusStyles.processing
-                                        const paymentStatus = statusStyles[order.paymentStatus] || statusStyles.pending
-
-                                        return (
-                                            <tr key={order._id} className='border-b border-amber-500/20 hover:bg-[#3a2b2b]/30 transition-colors'>
-                                                <td className='p-4 text-amber-100 font-mono text-sm'>#{order._id?.slice(-8)}</td>
-
-                                                <td className='p-4'>
-                                                    <div className='flex items-center gap-2'>
-                                                        <FiUser className='text-amber-400' />
-                                                        <div>
-                                                            <p className='text-amber-100'>{order.firstName} {order.lastName}</p>
-                                                            <p className='text-sm text-amber-400/60'>{order.phone}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4'>
-                                                    <div className='flex items-center gap-2'>
-                                                        <FiMapPin className='text-amber-400' />
-                                                        <div className='text-amber-100/80 text-sm max-w-[200px]'>
-                                                            {order.address}, {order.city}
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4'>
-                                                    <div className='space-y-2'>
-                                                        {order.items.map((item, index) => (
-                                                            <div key={index} className='flex items-center gap-3 p-2 bg-[#3a2b2b]/50 rounded-lg'>
-                                                                <img src={`http://localhost:4000${item.item.imageUrl}`} alt={item.item.name} className='w-10 h-10 object-cover rounded-lg' />
-                                                                <div className='flex-1'>
-                                                                    <span className='text-amber-100/80 text-sm block'>{item.item.name}</span>
-                                                                    <div className='flex items-center gap-2 text-xs text-amber-400/60'>
-                                                                        <span>Rs {item.item.price}</span>
-                                                                        {/* <span className='mx-1'>&dot;</span> */}
-                                                                        <span>x{item.quantity}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4 text-center'>
-                                                    <div className='flex items-center justify-center gap-1'>
-                                                        <FiBox className='text-amber-400' />
-                                                        <span className='text-amber-300 text-lg'>{totalItems}</span>
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4 text-amber-300 text-lg'>
-                                                    Rs {totalPrice.toFixed(2)}
-                                                </td>
-                                                <td className='p-4'>
-                                                    <div className='flex flex-col gap-2'>
-                                                        <div className={`${paymentMethod.class} px-3
-                                                        py-1.5 rounded-lg border text-sm`}>
-                                                            {paymentMethod.label}
-                                                        </div>
-                                                    </div>
-                                                    <div className={`mt-1 flex items-center gap-1 text-xs ${paymentStatus.color}`}>
-                                                        {paymentStatus.icon}
-                                                        <span>{paymentStatus.label}</span>
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4'>
-                                                    <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit ${orderStatus.bg} ${orderStatus.color}`}>
-                                                        {orderStatus.icon}
-                                                        <span>{orderStatus.label}</span>
-                                                    </div>
-                                                </td>
-
-                                                <td className='p-4 text-amber-300 text-sm'>
-                                                    {order.createdAt}
-                                                </td>
-
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link to="/" className="flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm">
+            <FiArrowLeft /> Back to Home
+          </Link>
+          <span className="text-amber-400/50 text-xs">{user?.email}</span>
         </div>
-    )
+
+        <h1 className="text-3xl font-bold text-white mb-8 text-center">
+          Order <span className="text-amber-400">History</span>
+        </h1>
+
+        {loading ? (
+          <p className="text-center text-amber-300 text-sm">Loading orders...</p>
+        ) : orders.length === 0 ? (
+          <p className="text-center text-amber-200/40 text-sm">No orders found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-amber-900/30 text-amber-400 text-xs uppercase tracking-wider">
+                  <th className="p-4 text-left">Order ID</th>
+                  <th className="p-4 text-left">Customer</th>
+                  <th className="p-4 text-left">Address</th>
+                  <th className="p-4 text-left">Items</th>
+                  <th className="p-4 text-left">Total</th>
+                  <th className="p-4 text-left">Payment</th>
+                  <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-left">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map(order => {
+                  const total = order.total ?? order.items.reduce(
+                    (sum, i) => sum + i.item.price * i.quantity, 0
+                  )
+                  const orderStatus = statusStyles[order.status] || statusStyles.processing
+                  const payStatus = statusStyles[order.paymentStatus] || statusStyles.pending
+
+                  return (
+                    <tr key={order._id} className="border-b border-amber-900/20 hover:bg-white/3 transition-colors">
+
+                      <td className="p-4 text-amber-200/60 font-mono">#{order._id?.slice(-8)}</td>
+
+                      <td className="p-4">
+                        <p className="text-amber-100">{order.firstName} {order.lastName}</p>
+                        <p className="text-amber-400/50 text-xs">{order.phone}</p>
+                      </td>
+
+                      <td className="p-4 text-amber-100/70 max-w-[160px]">
+                        {order.address}, {order.city}
+                      </td>
+
+                      <td className="p-4">
+                        <div className="space-y-2">
+                          {order.items.map((entry, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <img
+                                src={
+                                    entry.item.imageUrl?.startsWith('http')
+                                    ? entry.item.imageUrl
+                                    : `http://localhost:4000${entry.item.imageUrl}`
+                                }
+                                alt={entry.item.name}
+                                className="w-9 h-9 rounded-lg object-cover"
+                              />
+                              <div>
+                                <p className="text-amber-100/80">{entry.item.name}</p>
+                                <p className="text-amber-400/50 text-xs">Rs {entry.item.price} × {entry.quantity}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+
+                      <td className="p-4 text-amber-300 font-semibold">
+                        Rs {total.toFixed(0)}
+                      </td>
+
+                      <td className="p-4">
+                        <p className="text-amber-200/70 capitalize">{order.paymentMethod}</p>
+                        <div className={`flex items-center gap-1 text-xs mt-1 ${payStatus.color}`}>
+                          {payStatus.icon}
+                          <span>{payStatus.label}</span>
+                        </div>
+                      </td>
+
+                      <td className="p-4">
+                        <div className={`flex items-center gap-1 text-xs font-medium ${orderStatus.color}`}>
+                          {orderStatus.icon}
+                          <span>{orderStatus.label}</span>
+                        </div>
+                      </td>
+
+                      <td className="p-4 text-amber-200/50 text-xs whitespace-nowrap">
+                        {order.createdAt}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default MyOrder

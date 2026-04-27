@@ -14,7 +14,6 @@ const orderItemSchema = new mongoose.Schema({
 
 
 const orderSchema = new mongoose.Schema({
-    //user info
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -46,10 +45,8 @@ const orderSchema = new mongoose.Schema({
     },
 
 
-    //order items
     items: [orderItemSchema],
 
-    //payment method
     paymentMethod: {
         type: String,
         required: true,
@@ -67,13 +64,11 @@ const orderSchema = new mongoose.Schema({
         index: true
     },
 
-    // order calculation
     subtotal: { type: Number, required: true, min: 0 },
     tax: { type: Number, required: true, min: 0 },
     shipping: { type: Number, required: true, min: 0, default: 0 },
     total: { type: Number, required: true, min: 0 },
 
-    //order tracking
     status: {
         type: String,
         enum: ['processing', 'outForDelivery', 'delivered'],
@@ -83,7 +78,6 @@ const orderSchema = new mongoose.Schema({
     expectedDelivery: Date,
     deliveredAt: Date,
 
-    //Timestamps
     createdAt: { type: Date, default: Date.now, index: true },
     updatedAt: { type: Date, default: Date.now },
 })
