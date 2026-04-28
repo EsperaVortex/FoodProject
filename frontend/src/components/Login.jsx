@@ -73,18 +73,17 @@ const Login = ({ onLoginSuccess, onClose }) => {
 
     return (
         <div className='space-y-6 relative'>
-            <div className={`fixed top-4 right-4 z-50 transition-all duration-300
-                ${showToast.visible ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0'}`}>
-                <div className={`px-4 py-3 rounded-md shadow-lg flex items-center gap-2 text-sm
-                    ${showToast.isError ? 'bg-red-600 text-white' : 'bg-green-400 text-white'}`}>
-
-                </div>
-                <div className='bg-green-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center
-                gap-2 textsm'>
-                    <FaCheckCircle className='flex-shrink-0' />
-                    <span>{showToast.message}</span>
-                </div>
-            </div>
+            <div className={`fixed top-5 right-5 z-50 transition-all duration-300
+            ${showToast.visible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}>
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-md border text-sm font-medium
+            ${showToast.isError
+                ? 'bg-white border-red-200 text-red-600'
+                : 'bg-white border-green-200 text-green-600'}`}>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0
+            ${showToast.isError ? 'bg-red-500' : 'bg-green-500'}`} />
+            <span>{showToast.message}</span>
+        </div>
+    </div>
 
             <form onSubmit={handleSubmit} className='space-y-6'>
                 <div className='relative'>

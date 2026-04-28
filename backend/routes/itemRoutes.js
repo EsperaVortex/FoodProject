@@ -4,7 +4,6 @@ import { createItem, getItems, deleteItem } from '../controllers/itemController.
 
 const itemRouter = express.Router()
 
-// Multer function to store image
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, 'uploads/'),
     filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
