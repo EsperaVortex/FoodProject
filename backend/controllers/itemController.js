@@ -23,8 +23,10 @@ export const createItem = async (req, res, next) => {
         res.status(201).json(saved);
     }
     catch (error) {
-        res.status(400).json({
-            message: 'Item name already exists'
+        console.error("Error:" + error);
+
+        res.status(500).json({
+            message: error.message
         });
     }
 }

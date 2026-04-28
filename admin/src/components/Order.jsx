@@ -136,7 +136,7 @@ const Order = () => {
                                                     {order.items.map((itm, idx) => (
                                                         <div key={idx} className="flex items-center gap-3 p-2 rounded-lg">
                                                             <img
-                                                                src={`http://localhost:4000${itm.item.imageUrl}`}
+                                                                src={itm.item.imageUrl}
                                                                 alt={itm.item.name}
                                                                 className="w-10 h-10 object-cover rounded-lg"
                                                             />
@@ -145,7 +145,6 @@ const Order = () => {
 
                                                                 <div className="flex items-center gap-2 text-xs text-amber-400/60">
                                                                     <span>Rs {Number(itm.item.price).toFixed(2)}</span>
-                                                                    <span>&dot;</span>
                                                                     <span>x{itm.quantity}</span>
                                                                 </div>
                                                             </div>

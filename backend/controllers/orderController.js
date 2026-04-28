@@ -145,7 +145,13 @@ export const getAllOrders = async (req, res) => {
             createdAt: o.createdAt,
             items: o.items.map(i => ({
                 _id: i._id,
-                item: { ...i.item, imageUrl: i.item.imageUrl ? host + i.item.imageUrl : '/images/default-item.jpg' },
+                item: {
+                    ...i.item, imageUrl: i.item.imageUrl
+                        ? i.item.imageUrl.startsWith('http')
+                            ? i.item.imageUrl
+                            : host + i.item.imageUrl
+                        : '/images/default-item.jpg'
+                },
                 quantity: i.quantity
             }))
         }))
